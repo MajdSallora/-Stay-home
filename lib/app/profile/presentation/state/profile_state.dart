@@ -1,15 +1,17 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 part of 'profile_bloc.dart';
 
-@immutable
-abstract class ProfileState {}
+class ProfileState {
+  final Result<List<VehicleType>> vehicleType;
+  ProfileState({
+    this.vehicleType = const Result.init(),
+  });
 
-class ProfileInitial extends ProfileState {}
-
-class ProfileLoading extends ProfileState {}
-
-class ProfileError extends ProfileState {
-  final String error;
-  ProfileError({required this.error});
+  ProfileState copyWith({
+    Result<List<VehicleType>>? vehicleType,
+  }) {
+    return ProfileState(
+      vehicleType: vehicleType ?? this.vehicleType,
+    );
+  }
 }
-
-class ProfileLoaded extends ProfileState {}

@@ -1,309 +1,534 @@
+import 'package:driver_project/app/deliver_details/presentation/state/bloc/deliver_detail_bloc.dart';
+import 'package:driver_project/common/constant/src/enum.dart';
+import 'package:driver_project/common/constant/src/url.dart';
+import 'package:driver_project/common/core/result_builder/result_builder.dart';
+import 'package:driver_project/common/imports/imports.dart';
+import 'package:driver_project/common/injection/injection.dart';
 import 'package:driver_project/common/utiles/date_converter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import '../../../../../common/const/colors.dart';
-import '../../../../../common/const/enum.dart';
 import '../../../../../generated/assets.dart';
 
 class DeliverDetails extends StatelessWidget {
-  const DeliverDetails({Key? key, required this.type, required this.isView, required this.inDelivery,required this.isDone}) : super(key: key);
+  const DeliverDetails({
+    Key? key,
+    required this.type,
+    required this.isView,
+    required this.inDelivery,
+    required this.isDone,
+    required this.id,
+  }) : super(key: key);
   final bool isView;
   final bool inDelivery;
   final bool isDone;
+  final String id;
 
-  final Deliver type;
-
-  factory DeliverDetails.person({required bool isView, required bool inDelivery}) => DeliverDetails(
-        type: Deliver.person,
-        isView: isView,
-        inDelivery: inDelivery,
-    isDone: false,
-      );
-
-  factory DeliverDetails.goods({required bool isView, required bool inDelivery}) =>
-      DeliverDetails(type: Deliver.goods, isView: isView, inDelivery: inDelivery,isDone: false,);
-
-  factory DeliverDetails.staff({required bool isView, required bool inDelivery}) =>
-      DeliverDetails(type: Deliver.staff, isView: isView, inDelivery: inDelivery,isDone: false,);
+  final OrderType type;
 
   @override
   Widget build(BuildContext context) {
     return isView
-        ? body(context, isView, inDelivery,isDone)
+        ? body(context, isView, inDelivery, isDone)
         : SafeArea(
             child: Scaffold(
               body: Padding(
                 padding: EdgeInsets.all(16.r),
-                child: body(context, isView, inDelivery,isDone),
+                child: body(context, isView, inDelivery, isDone),
               ),
             ),
           );
   }
 
-  Widget body(BuildContext context, bool isView, bool inDelivery,bool isDone) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 24.h,
-        ),
-        isView ? const SizedBox() : SvgPicture.asset(Assets.assetsRoad),
-        isView
-            ? const SizedBox()
-            : SizedBox(
-                height: 12.h,
+  Widget body(BuildContext context, bool isView, bool inDelivery, bool isDone) {
+    return BlocProvider.value(
+      value: getIt<DeliverDetailBloc>()..add(GetOrderById(id: id, type: type)),
+      child: SingleChildScrollView(
+        child: BlocBuilder<DeliverDetailBloc, DeliverDetailState>(
+          builder: (context, state) {
+            return ResultBuilder(
+              error: (message) => const Center(
+                child: Text('حدث خطأ ما'),
               ),
-        Card(
-          elevation: 3,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 12.r, horizontal: 16.r),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                deliverTitle(),
-                SizedBox(
-                  height: 6.r,
-                ),
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      VerticalDivider(color: AppColors.primary, width: 5, thickness: 2),
-                      SizedBox(
-                        width: 8.r,
+              init: () => const SizedBox(),
+              loading: () => SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: const Center(
+                        child: CircularProgressIndicator(),
                       ),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Row(
+                    ),
+                  ],
+                ),
+              ),
+              result: state.order,
+              success: (data) => Column(
+                children: [
+                  SizedBox(
+                    height: 24.h,
+                  ),
+                  isView ? const SizedBox() : SvgPicture.asset(Assets.assetsRoad),
+                  isView
+                      ? const SizedBox()
+                      : SizedBox(
+                          height: 12.h,
+                        ),
+                  Card(
+                    elevation: 3,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12.r, horizontal: 16.r),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          deliverTitle(),
+                          SizedBox(
+                            height: 6.r,
+                          ),
+                          IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SvgPicture.asset(Assets.assetsPerson),
+                                VerticalDivider(color: AppColors.primary, width: 5, thickness: 2),
                                 SizedBox(
-                                  width: 4.w,
+                                  width: 8.r,
                                 ),
-                                const Text("MAJD"),
-                              ],
-                            ),
-                            SizedBox(
-                              height: 6.r,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    SvgPicture.asset(Assets.assetsMoney),
-                                    SizedBox(
-                                      width: 4.w,
-                                    ),
-                                    const Text(
-                                      "  500 ل.س",
-                                      textDirection: TextDirection.rtl,
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [const Icon(Icons.date_range), Text(DateTime.now().toDateOnly())],
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          SvgPicture.asset(Assets.assetsPerson),
+                                          SizedBox(
+                                            width: 4.w,
+                                          ),
+                                          Text(data.customer),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: 6.r,
+                                      ),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              SvgPicture.asset(Assets.assetsMoney),
+                                              SizedBox(
+                                                width: 4.w,
+                                              ),
+                                              Text(
+                                                "  ${data.coast} ل.س",
+                                                textDirection: TextDirection.rtl,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: 6.r,
+                                      ),
+                                      Row(
+                                        children: [
+                                          SvgPicture.asset(Assets.assetsFirstPoint),
+                                          SizedBox(
+                                            width: 4.r,
+                                          ),
+                                          Text(data.source),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: 6.r,
+                                      ),
+                                      Row(
+                                        children: [
+                                          SvgPicture.asset(Assets.assetsSecondPoint),
+                                          SizedBox(
+                                            width: 4.r,
+                                          ),
+                                          Text(data.destination),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 )
                               ],
                             ),
-                            SizedBox(
-                              height: 6.r,
-                            ),
-                            Row(
+                          ),
+                          Divider(),
+                          IntrinsicHeight(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                SvgPicture.asset(Assets.assetsFirstPoint),
-                                SizedBox(
-                                  width: 4.r,
+                                const SizedBox(),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(data.date.toDateOnly()),
+                                    SizedBox(
+                                      height: 2.r,
+                                    ),
+                                    Text(data.date.toTimeOnly()),
+                                    SizedBox(
+                                      height: 2.r,
+                                    ),
+                                    SvgPicture.asset(Assets.assetsClock),
+                                  ],
                                 ),
-                                Text("حلب الجديدة"),
+                                VerticalDivider(),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text("المسافة بين نقطتين"),
+                                    SizedBox(
+                                      height: 2.r,
+                                    ),
+                                    Text("${data.distance} Km"),
+                                    SizedBox(
+                                      height: 2.r,
+                                    ),
+                                    SvgPicture.asset(Assets.assetsLocationMap),
+                                  ],
+                                ),
+                                const SizedBox(),
                               ],
                             ),
-                            SizedBox(
-                              height: 6.r,
-                            ),
-                            Row(
-                              children: [
-                                SvgPicture.asset(Assets.assetsSecondPoint),
-                                SizedBox(
-                                  width: 4.r,
-                                ),
-                                Text("سيف الدولة"),
-                              ],
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-                Divider(),
-                IntrinsicHeight(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const SizedBox(),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(DateTime.now().toDateOnly()),
-                          SizedBox(
-                            height: 2.r,
                           ),
-                          Text(DateTime.now().toTimeOnly()),
-                          SizedBox(
-                            height: 2.r,
-                          ),
-                          SvgPicture.asset(Assets.assetsClock),
-                        ],
-                      ),
-                      VerticalDivider(),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("المسافة بين نقطتين"),
-                          SizedBox(
-                            height: 2.r,
-                          ),
-                          Text("16 Km"),
-                          SizedBox(
-                            height: 2.r,
-                          ),
-                          SvgPicture.asset(Assets.assetsLocationMap),
-                        ],
-                      ),
-                      const SizedBox(),
-                    ],
-                  ),
-                ),
-                Divider(),
-                IntrinsicHeight(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(),
-                      Container(
-                          width: 138.r,
-                          height: 138.r,
-                          decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(24)),
-                          child: const FlutterLogo()),
-                      VerticalDivider(
-                        color: AppColors.primary,
-                        thickness: 2,
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("المركبة التي ستستلمها للرحلة"),
-                          SizedBox(
-                            height: 2.r,
-                          ),
-                          const Text("النوع: شاحنة"),
-                          SizedBox(
-                            height: 2.r,
-                          ),
-                          const Text("الأسم: هوندا"),
-                          SizedBox(
-                            height: 2.r,
-                          ),
-                          const Text("الرقم: 09929"),
-                        ],
-                      ),
-                      const SizedBox(),
-                    ],
-                  ),
-                ),
-                Divider(),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text("معلومات إضافية", style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w700)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Row(
+                          Divider(),
+                          if (data.cartModel != null && data.cartModel!.isNotEmpty)
+                            const Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Text("إجمالي الوزن 500 كيلو", style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.primary)),
-                                SizedBox(
-                                  width: 4.r,
-                                ),
-                                SvgPicture.asset(Assets.assetsBox),
+                                Text(" :سلة الزبون تتضمن المنتجات التالية"),
                               ],
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "ملاحظات الزبون: الرجاء عدم قرع الجرس",
-                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.primary),
-                                ),
-                                SizedBox(
-                                  width: 4.r,
-                                ),
-                                SvgPicture.asset(Assets.assetsCatagorey),
-                              ],
-                            ),
-                            Divider(),
+                          if (data.cartModel != null && data.cartModel!.isNotEmpty)
                             SizedBox(
-                              height: 4.r,
+                              height: 3.h,
                             ),
-                            Center(
-                                child: inDelivery && !isDone
-                                    ? Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        children: [
-                                          ElevatedButton(
-                                            onPressed: () {},
-                                            child: Text("تأكيد الطلب"),
-                                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary),
-                                          ),
-                                          ElevatedButton(
-                                              onPressed: () {
-                                                showDialog(context: context, builder: (context){
-                                                  return SimpleDialog(
-                                                    contentPadding: EdgeInsets.all(16.r),
-                                                    children: [
-                                                      Center(child: Text("سبب الإلغاء",style: Theme.of(context).textTheme.bodyLarge,)),
-                                                      Divider(),
-                                                      SizedBox(height: 8.r,),
-                                                      const TextField(),
-                                                      SizedBox(height: 16.r,),
-                                                      ElevatedButton(onPressed: (){
-                                                        Navigator.of(context).pop();
-                                                      }, child: Text("إلغاء"),
-                                                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.red))
-                                                    ],
-                                                  );
-                                                });
-                                              },
-                                              child: Text("إلغاء"),
-                                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.red)),
-                                        ],
-                                      )
-                                    : isDone ? const SizedBox() : ElevatedButton(onPressed: () {}, child: Text("ابدأ التوصيل")))
-                          ],
-                        ),
-                      )
-                    ],
+                          if (data.cartModel != null && data.cartModel!.isNotEmpty)
+                            IntrinsicHeight(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const SizedBox(),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    children: [
+                                      for (int i = 0; i < data.cartModel!.length; i++) Text('${data.cartModel![i].quantity}'),
+                                    ],
+                                  ),
+                                  VerticalDivider(
+                                    color: AppColors.primary,
+                                    thickness: 2,
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      for (int i = 0; i < data.cartModel!.length; i++)
+                                        Column(
+                                          children: [
+                                            CartItem(
+                                              image: '${AppUrl.baseUrl}/${data.cartModel![i].imageUrl}',
+                                              name: data.cartModel![i].name,
+                                            ),
+                                            SizedBox(
+                                              height: 5.r,
+                                            ),
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(),
+                                ],
+                              ),
+                            ),
+                          if (data.cartModel != null && data.cartModel!.isNotEmpty) Divider(),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                if (data.note != null || data.weight != null || data.numberOfPassenger != null)
+                                  Text("معلومات إضافية", style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w700)),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      if (data.numberOfPassenger != null)
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.end,
+                                          children: [
+                                            Text('عدد الركاب: ${data.numberOfPassenger}',
+                                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.primary)),
+                                            SizedBox(
+                                              width: 4.r,
+                                            ),
+                                            const Icon(Icons.groups),
+                                          ],
+                                        ),
+                                      if (data.weight != null)
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.end,
+                                          children: [
+                                            Text("إجمالي الوزن ${data.weight} كيلو",
+                                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.primary)),
+                                            SizedBox(
+                                              width: 4.r,
+                                            ),
+                                            SvgPicture.asset(Assets.assetsBox),
+                                          ],
+                                        ),
+                                      if (data.note != null)
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              "ملاحظات الزبون: ${data.note}",
+                                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.primary),
+                                            ),
+                                            SizedBox(
+                                              width: 4.r,
+                                            ),
+                                            SvgPicture.asset(Assets.assetsCatagorey),
+                                          ],
+                                        ),
+                                      if (data.note != null || data.weight != null) Divider(),
+                                      if (data.note != null || data.weight != null)
+                                        SizedBox(
+                                          height: 4.r,
+                                        ),
+                                      Center(
+                                          child: inDelivery && !isDone
+                                              ? Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                  children: [
+                                                    ElevatedButton(
+                                                      onPressed: () {
+                                                        context.read<DeliverDetailBloc>().add(CompleteOrder(id: id));
+                                                      },
+                                                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary),
+                                                      child: const Text("إنهاء الرحلة"),
+                                                    ),
+                                                    ElevatedButton(
+                                                      onPressed: () {
+                                                        String cancelBy = '';
+                                                        String reason = '';
+                                                        showDialog(
+                                                          context: context,
+                                                          builder: (_) {
+                                                            return SimpleDialog(
+                                                              contentPadding: EdgeInsets.all(16.r),
+                                                              children: [
+                                                                Center(
+                                                                    child: Text(
+                                                                  "الإلغاء",
+                                                                  style: Theme.of(context).textTheme.bodyLarge,
+                                                                )),
+                                                                const Divider(),
+                                                                SizedBox(
+                                                                  height: 8.r,
+                                                                ),
+                                                                Row(
+                                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                                  children: [
+                                                                    const Text(':إلغاء من قبل'),
+                                                                  ],
+                                                                ),
+                                                                StatefulBuilder(
+                                                                  builder: (context, setState) => SizedBox(
+                                                                    height: 70.h,
+                                                                    child: InputDecorator(
+                                                                      decoration: InputDecoration(
+                                                                        border:
+                                                                            OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(23.r))),
+                                                                      ),
+                                                                      child: DropdownButtonHideUnderline(
+                                                                        child: Directionality(
+                                                                          textDirection: TextDirection.rtl,
+                                                                          child: DropdownButton(
+                                                                            value: cancelBy.isEmpty ? null : cancelBy,
+                                                                            items: const [
+                                                                              DropdownMenuItem(
+                                                                                value: 'Customer',
+                                                                                child: Text('الزبون'),
+                                                                              ),
+                                                                              DropdownMenuItem(
+                                                                                value: 'Driver',
+                                                                                child: Text('السائق'),
+                                                                              ),
+                                                                            ],
+                                                                            onChanged: (value) {
+                                                                              setState(() {
+                                                                                cancelBy = value!;
+                                                                              });
+                                                                            },
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                SizedBox(
+                                                                  height: 10.h,
+                                                                ),
+                                                                TextField(
+                                                                  onChanged: (value) => reason = value,
+                                                                  textDirection: TextDirection.rtl,
+                                                                ),
+                                                                SizedBox(
+                                                                  height: 16.r,
+                                                                ),
+                                                                ElevatedButton(
+                                                                  onPressed: () {
+                                                                    if (reason.isNotEmpty && cancelBy.isNotEmpty) {
+                                                                      context
+                                                                          .read<DeliverDetailBloc>()
+                                                                          .add(CancelOrder(id: id, cancelBy: cancelBy, reason: reason));
+                                                                    }
+                                                                    Navigator.of(context).pop();
+                                                                  },
+                                                                  child: Text("إلغاء"),
+                                                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
+                                                                ),
+                                                              ],
+                                                            );
+                                                          },
+                                                        );
+                                                      },
+                                                      child: Text("إلغاء"),
+                                                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
+                                                    ),
+                                                  ],
+                                                )
+                                              : isDone
+                                                  ? const SizedBox()
+                                                  : Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                      children: [
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            context.read<DeliverDetailBloc>().add(AcceptOrder(id: id));
+                                                          },
+                                                          child: Text("ابدأ التوصيل"),
+                                                        ),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            String cancelBy = '';
+                                                            String reason = '';
+                                                            showDialog(
+                                                              context: context,
+                                                              builder: (_) {
+                                                                return SimpleDialog(
+                                                                  contentPadding: EdgeInsets.all(16.r),
+                                                                  children: [
+                                                                    Center(
+                                                                        child: Text(
+                                                                      "الإلغاء",
+                                                                      style: Theme.of(context).textTheme.bodyLarge,
+                                                                    )),
+                                                                    const Divider(),
+                                                                    SizedBox(
+                                                                      height: 8.r,
+                                                                    ),
+                                                                    Row(
+                                                                      mainAxisAlignment: MainAxisAlignment.end,
+                                                                      children: [
+                                                                        const Text(':إلغاء من قبل'),
+                                                                      ],
+                                                                    ),
+                                                                    StatefulBuilder(
+                                                                      builder: (context, setState) => SizedBox(
+                                                                        height: 70.h,
+                                                                        child: InputDecorator(
+                                                                          decoration: InputDecoration(
+                                                                            border: OutlineInputBorder(
+                                                                                borderRadius: BorderRadius.all(Radius.circular(23.r))),
+                                                                          ),
+                                                                          child: DropdownButtonHideUnderline(
+                                                                            child: Directionality(
+                                                                              textDirection: TextDirection.rtl,
+                                                                              child: DropdownButton(
+                                                                                value: cancelBy.isEmpty ? null : cancelBy,
+                                                                                items: const [
+                                                                                  DropdownMenuItem(
+                                                                                    value: 'Customer',
+                                                                                    child: Text('الزبون'),
+                                                                                  ),
+                                                                                  DropdownMenuItem(
+                                                                                    value: 'Driver',
+                                                                                    child: Text('السائق'),
+                                                                                  ),
+                                                                                ],
+                                                                                onChanged: (value) {
+                                                                                  setState(() {
+                                                                                    cancelBy = value!;
+                                                                                  });
+                                                                                },
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                    SizedBox(
+                                                                      height: 10.h,
+                                                                    ),
+                                                                    TextField(
+                                                                      onChanged: (value) => reason = value,
+                                                                      textDirection: TextDirection.rtl,
+                                                                    ),
+                                                                    SizedBox(
+                                                                      height: 16.r,
+                                                                    ),
+                                                                    ElevatedButton(
+                                                                      onPressed: () {
+                                                                        if (reason.isNotEmpty && cancelBy.isNotEmpty) {
+                                                                          context
+                                                                              .read<DeliverDetailBloc>()
+                                                                              .add(CancelOrder(id: id, cancelBy: cancelBy, reason: reason));
+                                                                        }
+                                                                        Navigator.of(context).pop();
+                                                                      },
+                                                                      child: Text("إلغاء"),
+                                                                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
+                                                                    ),
+                                                                  ],
+                                                                );
+                                                              },
+                                                            );
+                                                          },
+                                                          child: Text("إلغاء"),
+                                                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.red),
+                                                        ),
+                                                      ],
+                                                    ))
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
                   ),
-                )
-              ],
-            ),
-          ),
+                ],
+              ),
+            );
+          },
         ),
-      ],
+      ),
     );
   }
 
   Widget deliverTitle() {
     switch (type) {
-      case Deliver.goods:
+      case OrderType.shipping:
         return Row(
           children: [
             SvgPicture.asset(Assets.assetsVan),
@@ -313,7 +538,7 @@ class DeliverDetails extends StatelessWidget {
             Text("توصيل بضائع")
           ],
         );
-      case Deliver.staff:
+      case OrderType.delivery:
         return Row(
           children: [
             SvgPicture.asset(Assets.assetsRoadStaff),
@@ -323,7 +548,7 @@ class DeliverDetails extends StatelessWidget {
             Text("توصيل أغراض")
           ],
         );
-      case Deliver.person:
+      case OrderType.passenger:
         return Row(
           children: [
             SvgPicture.asset(Assets.assetsDeliverPerson),
@@ -334,5 +559,47 @@ class DeliverDetails extends StatelessWidget {
           ],
         );
     }
+  }
+}
+
+class CartItem extends StatelessWidget {
+  final String name;
+  final String image;
+
+  const CartItem({
+    super.key,
+    required this.name,
+    required this.image,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(name),
+        SizedBox(
+          width: 5.w,
+        ),
+        Material(
+          elevation: 2,
+          borderRadius: BorderRadius.circular(50.r),
+          child: Container(
+            width: 40.r,
+            height: 40.r,
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(50.r),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(50.r),
+              child: Image.network(
+                image,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

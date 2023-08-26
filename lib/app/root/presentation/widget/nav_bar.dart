@@ -8,6 +8,7 @@ class NavRoot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConvexAppBar(
+      initialActiveIndex: 1,
       backgroundColor: AppColors.white,
       activeColor: AppColors.primary,
       color: AppColors.grey,

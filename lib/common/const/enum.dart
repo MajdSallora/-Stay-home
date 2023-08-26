@@ -1,1 +1,0 @@
-enum Deliver {goods,staff,person}

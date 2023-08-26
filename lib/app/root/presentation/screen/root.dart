@@ -13,7 +13,7 @@ class RootScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    PageController controller = PageController();
+    PageController controller = PageController(initialPage: 1);
     return SafeArea(
       child: Scaffold(
         bottomNavigationBar:  NavRoot(

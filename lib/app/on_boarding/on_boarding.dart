@@ -1,4 +1,6 @@
+import 'package:driver_project/app/login/infrastructure/data_source/local/reactive_token_storage.dart';
 import 'package:driver_project/common/const/colors.dart';
+import 'package:driver_project/common/injection/injection.dart';
 import 'package:driver_project/generated/assets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -12,42 +14,49 @@ class OnBoarding extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('rabea ifmksad ${getIt<ReactiveTokenStorage>().authStatus}');
     return IntroductionScreen(
       skipStyle: ButtonStyle(
         backgroundColor: MaterialStateColor.resolveWith((states) => AppColors.primary),
       ),
-      dotsDecorator: DotsDecorator(
-        activeColor: AppColors.secondary
-      ),
+      dotsDecorator: DotsDecorator(activeColor: AppColors.secondary),
       doneStyle: ButtonStyle(
         backgroundColor: MaterialStateColor.resolveWith((states) => AppColors.primary),
       ),
       pages: [
-        page(title: "Start your ride",subtitle: "ابدأ في تخطيط طلباتك اليومية ووفر الوقت على الطريق",image: Assets.assetsOnbaord1,context: context),
-        page(title: "Join Us As Driver!",subtitle: "قم بالقيادة بذكاء وانضم إلى شبكة سائقينا  الضخمة  ",image: Assets.assetsOnbaord2,context: context),
-        page(title: "Stay Home On Ride",subtitle: "",image: Assets.assetsOnbaord3,context: context),
+        page(
+            title: "Start your ride", subtitle: "ابدأ في تخطيط طلباتك اليومية ووفر الوقت على الطريق", image: Assets.assetsOnbaord1, context: context),
+        page(
+            title: "Join Us As Driver!",
+            subtitle: "قم بالقيادة بذكاء وانضم إلى شبكة سائقينا  الضخمة  ",
+            image: Assets.assetsOnbaord2,
+            context: context),
+        page(title: "Stay Home On Ride", subtitle: "", image: Assets.assetsOnbaord3, context: context),
       ],
       showSkipButton: true,
       showNextButton: false,
-      skip:  Text("تخطي",style: TextStyle(color:AppColors.white),),
-      done:  Text("ابدأ الأن",style: TextStyle(color:AppColors.white)),
+      skip: Text(
+        "تخطي",
+        style: TextStyle(color: AppColors.white),
+      ),
+      done: Text("ابدأ الأن", style: TextStyle(color: AppColors.white)),
       onDone: () {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
       },
     );
   }
-  PageViewModel page({required String title,required String subtitle,required String image,required BuildContext context}){
+
+  PageViewModel page({required String title, required String subtitle, required String image, required BuildContext context}) {
     return PageViewModel(
       title: title,
       decoration: PageDecoration(
-        titleTextStyle: TextStyle(color: AppColors.primary,fontSize: 18.sp,fontWeight: FontWeight.bold),
+        titleTextStyle: TextStyle(color: AppColors.primary, fontSize: 18.sp, fontWeight: FontWeight.bold),
         bodyAlignment: Alignment.bottomCenter,
         imageFlex: 3,
-
       ),
       bodyWidget: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Center(child: Text(subtitle,textAlign: TextAlign.center,style: Theme.of(context).textTheme.titleMedium)),
+        child: Center(child: Text(subtitle, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium)),
       ),
       image: Center(child: SvgPicture.asset(image)),
     );
